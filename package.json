@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest --config jestconfig.json",
     "test:watch": "jest --config jestconfig.json --watch",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.json",
     "lint": "eslint . --fix",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",

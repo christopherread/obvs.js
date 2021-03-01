@@ -8,7 +8,7 @@ import {
   Response,
   Message
 } from "../../core/messages";
-import { FactoryFunc, shareableConnection } from "./connection";
+import { shareableConnection } from "./connection";
 import { MessagePublisher } from './MessagePublisher';
 import { MessageSource } from './MessageSource';
 import { ServiceEndpointClient } from "../../core/ServiceEndpointClient";
