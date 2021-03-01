@@ -1,6 +1,6 @@
 import 'should';
 import { Channel, Connection, ConsumeMessage, Replies } from 'amqplib';
-import { messageSource } from "../../../transports/amqp/messageSource";
+import { MessageSource } from "../../../transports/amqp/MessageSource";
 import { shareableConnection } from "../../../transports/amqp/connection";
 import { stubInterface } from 'ts-sinon';
 import { RetryBackoffConfig } from 'backoff-rxjs';
@@ -17,13 +17,13 @@ const backoff: RetryBackoffConfig = {
 const eventLoopTick = (ms = 1): Promise<void> =>
   new Promise((resolve) => setTimeout(() => resolve(), ms));
 
-describe('amqp messageSource tests', () => {
+describe('amqp MessageSource tests', () => {
   it('should emit message from consumer', async () => {
     const conn = stubInterface<Connection>();
     // @ts-expect-error: Bluebird/Promise
     conn.close.returns(Promise.resolve());
     
-    const obsConn = shareableConnection(
+    const connections = shareableConnection(
       'some.uri',
       () => Promise.resolve(conn),
       backoff
@@ -57,13 +57,13 @@ describe('amqp messageSource tests', () => {
     conn.createChannel.returns(Promise.resolve(chan));
 
     const prefetch = 10;
-    const obs = messageSource(obsConn, { queue: 'queue1', source: 'ex1', pattern:'' }, {}, prefetch);
+    const source = new MessageSource(connections, { queue: 'queue1', source: 'ex1', pattern:'' }, {}, prefetch);
     await eventLoopTick();
 
     let onNext = 0;
     let onError = false;
     let onComplete = false;
-    const subscription1 = obs.subscribe(
+    const subscription1 = source.messages().subscribe(
       () => {
         onNext++;
       },

@@ -1,6 +1,8 @@
 import { Observable } from 'rxjs';
 import {
   map,
+  publish,
+  refCount,
   switchMap
 } from 'rxjs/operators';
 import {
@@ -8,19 +10,32 @@ import {
   Options
 } from 'amqplib';
 import { filterTruthy } from '../../utils/filterTruthy';
-import { retryingChannel } from './channel';
+import { Binding, retryingChannel } from './channel';
 import { MessageWrapper, wrapMessage } from "./message";
 import { retryingConsumer } from './consumer';
+import { Message } from "../../core/messages";
 
+const unwrap = <T extends Message>(msg: MessageWrapper<T>): T => ({ ...msg.payload, type: msg.payload.type });
 
-export const messageSource = <T>(
-  connection: Observable<Connection>,
-  binding: { queue: string; source: string; pattern: string; },
-  optionsConsume?: Options.Consume,
-  prefetch = 50
-): Observable<MessageWrapper<T>> => connection.pipe(
-  switchMap((connection) => retryingChannel(connection, prefetch, [], [binding])),
-  switchMap((channel) => retryingConsumer(channel, binding.queue, optionsConsume)),
-  map((msg) => wrapMessage<T>(binding.queue, msg)),
-  filterTruthy()
-);
+export class MessageSource<T extends Message> {
+  private messageObservable: Observable<T>;
+
+  constructor(connections: Observable<Connection>, 
+    binding: Binding,
+    options?: Options.Consume,
+    prefetch = 50) {
+    this.messageObservable = connections.pipe(
+      switchMap((connection) => retryingChannel(connection, prefetch, [], [binding])),
+      switchMap((channel) => retryingConsumer(channel, binding.queue, options)),
+      map((msg) => wrapMessage<T>(binding.queue, msg)),
+      filterTruthy(),
+      map(msg => unwrap(msg)),
+      publish(),
+      refCount()
+    );
+  }
+
+  messages(): Observable<T> {
+    return this.messageObservable;
+  }
+};

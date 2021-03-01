@@ -16,6 +16,8 @@ export interface ChannelMessage {
   options?: Options.Consume;
 }
 
+export type Binding = { queue: string; source: string; pattern: string; }
+
 const createChannel = async (
   connection: Connection,
   prefetch: number,
@@ -34,7 +36,7 @@ const createChannel = async (
   return channel;
 };
 
-const registerChannelListeners = (channel: Channel, unbindQueues: { queue: string; source: string; pattern: string; }[]): Observable<Channel> => new Observable<Channel>((subscriber) => {
+const registerChannelListeners = (channel: Channel, unbindQueues: Binding[]): Observable<Channel> => new Observable<Channel>((subscriber) => {
   console.info('Obvs: Creating new observable channel');
 
   channel.on('error', (err: Error) => {
@@ -76,7 +78,7 @@ export const observableChannel = (
   connection: Connection,
   prefetch = defaultPrefetch,
   checkQueues: string[] = [],
-  bindQueues: { queue: string; source: string; pattern: string; }[] = []
+  bindQueues: Binding[] = []
 ): Observable<Channel> => new Observable<Channel>((subscriber) => from(createChannel(connection, prefetch, checkQueues, bindQueues))
   .pipe(switchMap(channel => registerChannelListeners(channel, bindQueues)))
   .subscribe(subscriber)
@@ -86,7 +88,7 @@ export const retryingChannel = (
   connection: Connection,
   prefetch = 10,
   checkQueues: string[] = [],
-  bindQueues: { queue: string; source: string; pattern: string; }[] = [],
+  bindQueues: Binding[] = [],
   backoff = defaultBackoff
 ): Observable<Channel> => observableChannel(connection, prefetch, checkQueues, bindQueues).pipe(
   retryBackoff(backoff)
