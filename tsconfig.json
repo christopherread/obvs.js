@@ -5,8 +5,8 @@
     "declaration": true,
     "outDir": "./lib",
     "strict": true,
-    "rootDir": "src",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": "."
   },
   "include": [
     "src"
