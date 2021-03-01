@@ -7,12 +7,7 @@
     "test": "jest --config jestconfig.json",
     "test:watch": "jest --config jestconfig.json --watch",
     "build": "tsc --project tsconfig.json",
-    "lint": "eslint . --fix",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "git add -A src",
-    "postversion": "git push && git push --tags"
+    "lint": "eslint . --fix"
   },
   "repository": {
     "type": "git",
