@@ -2,8 +2,12 @@
 `Node.js` implementation of the popular .NET microservicebus library, `Obvs`, using `RxJS`.
 
 ## Getting started
+Add the package to your project:
+```
+npm add obvs.js
+```
 
-First, you need a server. Create a ServiceBus, with a single RabbitMQ endpoint:
+Create a ServiceBus, with a single RabbitMQ endpoint:
 ```
 const serviceBus = obvs.configureServiceBus()
   .withEndpoint(
@@ -67,6 +71,10 @@ serviceBusClient.getResponses(request).pipe(take(1)).subscribe(r => {
 
 ## Examples
 Examples pre-requisites: `node, npm, docker`.
+
+```
+git pull https://github.com/christopherread/obvs.js
+```
 
 Install dependencies
 ```
