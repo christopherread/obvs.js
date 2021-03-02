@@ -38,6 +38,13 @@ const validateConfig = (cfg: AmqpEndpointConfig) => {
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));
   }
+  
+  if (!cfg.options?.queueSuffix && cfg.options?.deleteQueues === undefined) {
+    cfg.options = {
+      ...cfg.options,
+      deleteQueues: true
+    }
+  }
 }
 
 export const configureAmqpEndpoint = <

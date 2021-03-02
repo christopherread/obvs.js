@@ -36,11 +36,14 @@ describe('amqp MessagePublisher tests', () => {
     // @ts-ignore
     conn.createChannel.returns(Promise.resolve(chan));
 
-    const publisher = new MessagePublisher(connections);
+    const publisher = new MessagePublisher(connections, {
+      exchange: 'ex',
+      type: 'topic'
+    });
 
     await eventLoopTick();
 
-    publisher.publish({ exchange: 'ex', routingKey: 'route', message: {}})
+    publisher.publish({ routingKey: 'route', message: {}})
 
     await eventLoopTick();
   });

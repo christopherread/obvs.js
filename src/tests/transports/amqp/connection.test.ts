@@ -75,7 +75,7 @@ describe('amqp observable connection tests', () => {
 
     subscription2.unsubscribe();
     subscription3.unsubscribe();
-    await eventLoopTick();
+    await eventLoopTick(200);
 
     assert(conn.removeAllListeners.called, 'removeAllListeners not called');
     assert(conn.close.called, 'close not called');
@@ -111,13 +111,13 @@ describe('amqp observable connection tests', () => {
 
     subscription2.unsubscribe();
     subscription3.unsubscribe();
-    await eventLoopTick();
+    await eventLoopTick(200);
 
     assert(conn.removeAllListeners.called, 'removeAllListeners not called');
     assert(conn.close.called, 'close not called');
 
     const subscription4 = obs.subscribe();
-    await eventLoopTick();
+    await eventLoopTick(200);
 
     assert(factory.callCount > 1, 'did not re-connect');
     assert.strictEqual(factory.callCount, 2, 're-connected more than once');

@@ -107,7 +107,7 @@ describe('amqp observable channel tests', () => {
     subscription1.unsubscribe();
     subscription2.unsubscribe();
     subscription3.unsubscribe();
-    await eventLoopTick();
+    await eventLoopTick(50);
 
     assert(
       chan.removeAllListeners.callCount === 3,
