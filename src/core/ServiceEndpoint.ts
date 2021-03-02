@@ -2,7 +2,6 @@ import { Observable } from 'rxjs';
 import { Command, Event, Request, Response } from './messages';
 import { ServiceEndpointClient } from './ServiceEndpointClient';
 
-
 export interface ServiceEndpoint<
   TCommand extends Command = Command,
   TEvent extends Event = Event,

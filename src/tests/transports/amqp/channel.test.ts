@@ -20,7 +20,7 @@ const eventLoopTick = (ms = 1): Promise<void> =>
   new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 describe('amqp observable channel tests', () => {
-  it('should set prefetch, check queues, and register listeners', async () => {
+  it('observableChannel should set prefetch, assert queues, and register listeners', async () => {
     const conn = stubInterface<Connection>();
     // @ts-expect-error: Bluebird/Promise
     conn.close.returns(Promise.resolve());
@@ -36,9 +36,10 @@ describe('amqp observable channel tests', () => {
     // @ts-expect-error: Bluebird/Promise
     conn.createChannel.returns(Promise.resolve(chan));
 
-    const checkQueues = ['some.queue'];
+    const queues = [{ queue: 'queue1', source: 'ex1', pattern: '' }];
+    const exchanges = [{ exchange: 'ex1', type: 'topic' }];
     const prefetch = 10;
-    const obs = observableChannel(conn, prefetch, checkQueues);
+    const obs = observableChannel(conn, prefetch, exchanges, queues);
     await eventLoopTick();
 
     assert(conn.createChannel.notCalled, 'created channel before subscribing');
@@ -57,8 +58,13 @@ describe('amqp observable channel tests', () => {
     );
     assert(chan.prefetch.calledWith(prefetch), 'did not set prefetch');
     assert.strictEqual(
-      chan.checkQueue.callCount,
-      checkQueues.length * subscribers.length,
+      chan.assertExchange.callCount,
+      exchanges.length * subscribers.length,
+      'did not assert exchanges'
+    );
+    assert.strictEqual(
+      chan.assertQueue.callCount,
+      queues.length * subscribers.length,
       'did not assert queues'
     );
     assert(chan.on.calledWith('error'), 'error listener not registered');
@@ -67,7 +73,7 @@ describe('amqp observable channel tests', () => {
     subscribers.forEach((s) => s.unsubscribe());
   });
 
-  it('should disconnect and register listeners after unsubcribed', async () => {
+  it('observableChannel should disconnect and register listeners after unsubcribed', async () => {
     const conn = stubInterface<Connection>();
     // @ts-expect-error: Bluebird/Promise
     conn.close.returns(Promise.resolve());
@@ -83,9 +89,10 @@ describe('amqp observable channel tests', () => {
     // @ts-ignore
     conn.createChannel.returns(Promise.resolve(chan));
 
-    const checkQueues = ['some.queue'];
+    const queues = [{ queue: 'queue1', source: 'ex1', pattern: '' }];
+    const exchanges = [{ exchange: 'ex1', type: 'topic' }];
     const prefetch = 10;
-    const obs = observableChannel(conn, prefetch, checkQueues);
+    const obs = observableChannel(conn, prefetch, exchanges, queues);
     await eventLoopTick();
 
     const subscription1 = obs.subscribe();
@@ -109,7 +116,7 @@ describe('amqp observable channel tests', () => {
     assert(chan.close.callCount === 3, 'close not called');
   });
 
-  it('should not error/complete on channel error', async () => {
+  it('retryingChannel should not error/complete on channel error', async () => {
     const conn = stubInterface<Connection>();
     // @ts-expect-error: Bluebird/Promise
     conn.close.returns(Promise.resolve());
@@ -125,9 +132,10 @@ describe('amqp observable channel tests', () => {
     // @ts-ignore
     conn.createChannel.returns(Promise.resolve(chan));
 
-    const checkQueues = ['some.queue'];
+    const queues = [{ queue: 'queue1', source: 'ex1', pattern: '' }];
+    const exchanges = [{ exchange: 'ex1', type: 'topic' }];
     const prefetch = 10;
-    const obs = retryingChannel(conn, prefetch, checkQueues);
+    const obs = retryingChannel(conn, prefetch, exchanges, queues, backoff);
     await eventLoopTick();
 
     let listeners: { [ev: string]: (args?: any) => any } = {};
@@ -171,7 +179,7 @@ describe('amqp observable channel tests', () => {
     subscription.unsubscribe();
   });
 
-  it('should complete on channel close', async () => {
+  it('retryingChannel should complete on channel close', async () => {
     const conn = stubInterface<Connection>();
     // @ts-expect-error: Bluebird/Promise
     conn.close.returns(Promise.resolve());
@@ -187,9 +195,10 @@ describe('amqp observable channel tests', () => {
     // @ts-ignore
     conn.createChannel.returns(Promise.resolve(chan));
 
-    const checkQueues = ['some.queue'];
+    const queues = [{ queue: 'queue1', source: 'ex1', pattern: '' }];
+    const exchanges = [{ exchange: 'ex1', type: 'topic' }];
     const prefetch = 10;
-    const obs = retryingChannel(conn, prefetch, checkQueues);
+    const obs = retryingChannel(conn, prefetch, exchanges, queues, backoff);
     await eventLoopTick();
 
     let listeners: { [ev: string]: (args?: any) => any } = {};
@@ -230,7 +239,7 @@ describe('amqp observable channel tests', () => {
     subscription.unsubscribe();
   });
 
-  it('should emit new channel on channel error', async () => {
+  it('retryingChannel should emit new channel on error', async () => {
     const conn = stubInterface<Connection>();
     // @ts-expect-error: Bluebird/Promise
     conn.close.returns(Promise.resolve());
@@ -246,14 +255,10 @@ describe('amqp observable channel tests', () => {
     // @ts-expect-error: Bluebird/Promise
     conn.createChannel.returns(Promise.resolve(chan));
 
-    const checkQueues = ['some.queue'];
-    const bindQueues = [{
-      queue: 'some.queue',
-      source: 'some.exchange',
-      pattern: ''
-    }];
+    const queues = [{ queue: 'queue1', source: 'ex1', pattern: '' }];
+    const exchanges = [{ exchange: 'ex1', type: 'topic' }];
     const prefetch = 10;
-    const obs = retryingChannel(conn, prefetch, checkQueues, bindQueues, backoff);
+    const obs = retryingChannel(conn, prefetch, exchanges, queues, backoff);
     await eventLoopTick();
 
     let listeners: { [ev: string]: (args?: any) => any } = {};

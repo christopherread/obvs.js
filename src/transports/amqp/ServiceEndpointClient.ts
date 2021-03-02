@@ -9,11 +9,13 @@ import {
   Message
 } from "../../core/messages";
 import { shareableConnection } from "./connection";
-import { MessagePublisher } from './MessagePublisher';
+import { MessagePublisher, PublishArgs } from './MessagePublisher';
 import { MessageSource } from './MessageSource';
 import { ServiceEndpointClient } from "../../core/ServiceEndpointClient";
 import { AmqpEndpointConfig } from './config';
-import { Connection } from 'amqplib';
+import { Connection, Options } from 'amqplib';
+import { DEFAULT_EXCHANGE_TYPE } from './defaults';
+import { ExchangeArgs, QueueArgs } from './channel';
 
 export class AmqpServiceEndpointClient<
   TCommand extends Command = Command,
@@ -22,17 +24,22 @@ export class AmqpServiceEndpointClient<
   TResponse extends Response = Response>
   implements ServiceEndpointClient<TCommand, TEvent, TRequest, TResponse> {
 
+  protected readonly commandExchange: ExchangeArgs;
+  protected readonly eventExchange: ExchangeArgs;
+  protected readonly requestExchange: ExchangeArgs;
+  protected readonly responseExchange: ExchangeArgs;
+  protected readonly eventsQueue: QueueArgs;
+  protected readonly responseQueue: QueueArgs;
   protected readonly responseSource: MessageSource<TResponse>;
-  protected readonly commandsExchange: string;
-  protected readonly requestsExchange: string;
-  protected readonly responsesExchange: string;
   protected readonly requestPublisher: MessagePublisher<TRequest>;
   protected readonly commandPublisher: MessagePublisher<TCommand>;
-  protected readonly eventsExchange: string;
+
   protected readonly toRoutingKey: (msg: Message) => string;
   protected readonly types: Set<string> | undefined;
   protected readonly connections: Observable<Connection>;
   protected readonly queueSuffix: string;
+  protected readonly name: string;
+  protected readonly deleteQueues: boolean;
 
   constructor(cfg: AmqpEndpointConfig) {
     if (!cfg.url) {
@@ -41,39 +48,84 @@ export class AmqpServiceEndpointClient<
     if (!cfg.name) {
       throw new Error('endpoint name not defined');
     }
+    if (!cfg.types || cfg.types.size === 0) {
+      throw new Error('endpoint types not defined');
+    }
 
-    this.eventsExchange = `${cfg.name}.Events`;
-    this.commandsExchange = `${cfg.name}.Commands`;
-    this.requestsExchange = `${cfg.name}.Requests`;
-    this.responsesExchange = `${cfg.name}.Responses`;
+    this.name = cfg.name;
+    this.types = cfg.types;
+    this.toRoutingKey = (msg: Message) => `${cfg.name}.${msg.type}`;
+    this.queueSuffix = cfg.options?.queueSuffix || `pid-${process.pid}`;
+
+    // delete queues by default if using pid for queue suffix
+    this.deleteQueues =
+      cfg.options?.deleteQueues || (
+        !cfg.options?.queueSuffix &&
+        cfg.options?.deleteQueues === undefined
+      )
+
+    this.eventExchange = {
+      exchange: `${cfg.name}.Events`,
+      type: DEFAULT_EXCHANGE_TYPE,
+    };
+    this.commandExchange = {
+      exchange: `${cfg.name}.Commands`,
+      type: DEFAULT_EXCHANGE_TYPE,
+    };
+    this.requestExchange = {
+      exchange: `${cfg.name}.Requests`,
+      type: DEFAULT_EXCHANGE_TYPE,
+    };
+    this.responseExchange = {
+      exchange: `${cfg.name}.Responses`,
+      type: DEFAULT_EXCHANGE_TYPE,
+    };
+
+    const consumeOptions: Options.Consume = { noAck: true, exclusive: true };
+    const pattern = '*.*';
+
+    this.eventsQueue = {
+      source: this.eventExchange.exchange,
+      queue: `${this.eventExchange.exchange}-queue-${this.queueSuffix}`,
+      pattern,
+      options: {
+        delete: this.deleteQueues
+      }
+    };
+    this.responseQueue = {
+      source: this.responseExchange.exchange,
+      queue: `${this.responseExchange.exchange}-queue-${this.queueSuffix}`,
+      pattern,
+      options: {
+        delete: this.deleteQueues
+      }
+    };
+
     this.connections = shareableConnection(cfg.url, cfg.factory);
-    this.queueSuffix = `Queue-${process.pid}`;
 
-    const eventSource = new MessageSource<TEvent>(this.connections, {
-      source: this.eventsExchange,
-      queue: `${this.eventsExchange}-${this.queueSuffix}`,
-      pattern: '*'
-    });
+    const eventSource = new MessageSource<TEvent>(
+      this.connections,
+      this.eventExchange,
+      this.eventsQueue,
+      consumeOptions
+    );
     this.events = eventSource.messages();
 
-    this.responseSource = new MessageSource<TResponse>(this.connections, {
-      source: this.responsesExchange,
-      queue: `${this.responsesExchange}-${this.queueSuffix}`,
-      pattern: '*'
-    });
+    this.responseSource = new MessageSource<TResponse>(
+      this.connections,
+      this.responseExchange,
+      this.responseQueue,
+      consumeOptions
+    );
 
-    this.requestPublisher = new MessagePublisher<TRequest>(this.connections);
-    this.commandPublisher = new MessagePublisher<TCommand>(this.connections);
-
-    this.toRoutingKey = (msg: Message) => `${cfg.name}.${msg.type}`;
-    this.types = cfg.types;
+    this.requestPublisher = new MessagePublisher<TRequest>(this.connections, this.requestExchange);
+    this.commandPublisher = new MessagePublisher<TCommand>(this.connections, this.commandExchange);
   }
 
   events: Observable<TEvent>;
 
   send(command: TCommand): Promise<void> {
     this.commandPublisher.publish({
-      exchange: this.commandsExchange,
       routingKey: this.toRoutingKey(command),
       message: command
     });
@@ -86,17 +138,23 @@ export class AmqpServiceEndpointClient<
         request.requestId = uuidv4();
       }
       const matches = (msg: TResponse) => msg.requestId === request.requestId;
-      const publishArgs = {
-        exchange: this.requestsExchange,
+      const publishArgs: PublishArgs<TRequest> = {
         routingKey: this.toRoutingKey(request),
         message: request
       };
-      this.responseSource.messages().pipe(filter(matches)).subscribe(subscriber);
+      this.responseSource.messages().pipe(filter(r => matches(r))).subscribe(subscriber);
       this.requestPublisher.publish(publishArgs);
     });
   }
 
   canHandle({ type }: Message) {
     return !!this.types?.has(type)
+  }
+
+  close(): Promise<void> {
+    console.log('Obvs closing endpoint', this.name);
+    this.commandPublisher.close();
+    this.requestPublisher.close();
+    return Promise.resolve();
   }
 }

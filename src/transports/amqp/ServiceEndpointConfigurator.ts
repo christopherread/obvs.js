@@ -6,7 +6,7 @@ import {
 } from '../../core/messages';
 import { AmqpServiceEndpointClient } from './ServiceEndpointClient';
 import { AmqpServiceEndpoint } from './ServiceEndpoint';
-import { AmqpEndpointConfig } from './config';
+import { AmqpEndpointConfig, AmqpEndpointOptions } from './config';
 import { ServiceEndpoint } from '../../core/ServiceEndpoint';
 import { ServiceEndpointClient } from '../../core/ServiceEndpointClient';
 import { FactoryFunc } from './connection';
@@ -19,8 +19,25 @@ export interface AmqpEndpointConfigurator<
   connectTo: (url: string) => AmqpEndpointConfigurator<TCommand, TEvent, TRequest, TResponse>;
   named: (name: string) => AmqpEndpointConfigurator<TCommand, TEvent, TRequest, TResponse>;
   handles: (...types: string[]) => AmqpEndpointConfigurator<TCommand, TEvent, TRequest, TResponse>;
+  withOptions: (options: AmqpEndpointOptions) => AmqpEndpointConfigurator<TCommand, TEvent, TRequest, TResponse>;
   create: () => ServiceEndpoint<TCommand, TEvent, TRequest, TResponse>;
   createClient: () => ServiceEndpointClient<TCommand, TEvent, TRequest, TResponse>;
+}
+
+const validateConfig = (cfg: AmqpEndpointConfig) => {
+  const errors: string[] = [];
+  if (!cfg.url) {
+    errors.push(`please specify amqp broker url`);
+  }
+  if (!cfg.name) {
+    errors.push(`please specify service name`);
+  }
+  if (!cfg.types || cfg.types.size === 0) {
+    errors.push(`please specify list of message types for the service`);
+  }
+  if (errors.length > 0) {
+    throw new Error(errors.join('\n'));
+  }
 }
 
 export const configureAmqpEndpoint = <
@@ -45,6 +62,16 @@ export const configureAmqpEndpoint = <
       }
       return configureAmqpEndpoint<TCommand, TEvent, TRequest, TResponse>(cfg);
     },
-    createClient: () => new AmqpServiceEndpointClient<TCommand, TEvent, TRequest, TResponse>(cfg),
-    create: () => new AmqpServiceEndpoint<TCommand, TEvent, TRequest, TResponse>(cfg),
+    withOptions: (options: AmqpEndpointOptions) => {
+      cfg.options = options;
+      return configureAmqpEndpoint<TCommand, TEvent, TRequest, TResponse>(cfg);
+    },
+    createClient: () => {
+      validateConfig(cfg);
+      return new AmqpServiceEndpointClient<TCommand, TEvent, TRequest, TResponse>(cfg)
+    },
+    create: () => {
+      validateConfig(cfg);
+      return new AmqpServiceEndpoint<TCommand, TEvent, TRequest, TResponse>(cfg);
+    },
   });

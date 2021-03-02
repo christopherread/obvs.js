@@ -7,10 +7,9 @@ import {
   Connection,
   Options
 } from 'amqplib';
-import { retryingChannel } from './channel';
+import { ExchangeArgs, retryingChannel } from './channel';
 
 export interface PublishArgs<T> {
-  exchange: string;
   routingKey: string;
   message: T;
   options?: Options.Publish;
@@ -19,20 +18,23 @@ export interface PublishArgs<T> {
 export class MessagePublisher<T = any> {
   private channel: Channel | undefined;
   private subscription: Subscription | undefined;
-  constructor(connections: Observable<Connection>) {
-    this.subscription = connections.pipe(switchMap((connection) => retryingChannel(connection)))
+  private exchange: ExchangeArgs;
+
+  constructor(connections: Observable<Connection>, exchange: ExchangeArgs) {
+    this.exchange = exchange;
+    this.subscription = connections.pipe(switchMap((connection) => retryingChannel(connection, 10, [exchange])))
       .subscribe(
         c => this.channel = c, 
         () => this.channel = undefined, 
         () => this.channel = undefined);
   }
 
-  publish({ exchange, routingKey, message, options }: PublishArgs<T>) {
+  publish({ routingKey, message, options }: PublishArgs<T>) {
     if (!this.channel) {
       throw new Error(`MessagePublisher error: channel is undefined`)
     }
     this.channel.publish(
-      exchange,
+      this.exchange.exchange,
       routingKey,
       Buffer.from(JSON.stringify(message)),
       options

@@ -9,3 +9,5 @@ export const defaultBackoff: RetryBackoffConfig = {
 };
 
 export const defaultPrefetch = 10;
+
+export const DEFAULT_EXCHANGE_TYPE = 'topic';

@@ -17,6 +17,7 @@ export interface ServiceBusClient<
   readonly events: Observable<TEvent>;
   send(command: TCommand): Promise<void>;
   getResponses(request: TRequest): Observable<TResponse>;
+  close(): Promise<void>;
 }
 
 export class ServiceBusClientInstance<
@@ -30,7 +31,7 @@ export class ServiceBusClientInstance<
   protected endpoints: ServiceEndpoint<TCommand, TEvent, TRequest, TResponse>[];
 
   constructor(cfg: ServiceBusConfig<TCommand, TEvent, TRequest, TResponse>) {
-    this.events = merge(
+    this.events = merge<TEvent>(
       ...cfg.endpoints.map(ep => ep.events),
       ...cfg.endpointClients.map(ep => ep.events)
     );
@@ -48,10 +49,17 @@ export class ServiceBusClientInstance<
   };
 
   getResponses(request: TRequest) {
-    return merge(
+    return merge<TResponse>(
       ...this.endpoints.filter(ep => ep.canHandle(request)).map(ep => ep.getResponses(request)),
       ...this.endpointClients.filter(ep => ep.canHandle(request)).map(ep => ep.getResponses(request))
     )
+  }
+
+  async close(): Promise<void> {
+    await Promise.all([
+      ...this.endpointClients.map(ep => ep.close()),
+      ...this.endpoints.map(ep => ep.close()),
+    ]);
   }
 }
 

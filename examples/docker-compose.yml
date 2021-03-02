@@ -1,0 +1,15 @@
+version: '2'
+
+networks:
+  obvs-examples-network:
+    driver: bridge
+
+services:
+    rabbitmq:
+        image: 'bitnami/rabbitmq:latest'
+        container_name: obvs-examples-rabbitmq
+        ports:
+            - 5672:5672
+            - 15672:15672
+        networks:
+          - obvs-examples-network

@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs';
 import { Command, Event, Request, Response, Message } from './index';
 
-
 export interface ServiceEndpointClient<
   TCommand extends Command = Command,
   TEvent extends Event = Event,
@@ -11,4 +10,5 @@ export interface ServiceEndpointClient<
   send(command: TCommand): Promise<void>;
   getResponses(request: TRequest): Observable<TResponse>;
   canHandle(message: Message): boolean;
+  close(): Promise<void>;
 }

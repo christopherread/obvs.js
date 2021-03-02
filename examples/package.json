@@ -1,0 +1,22 @@
+{
+  "name": "obvs.js.examples",
+  "version": "0.1.0",
+  "description": "obvs.js examples",
+  "main": "server.ts",
+  "scripts": {
+    "preserver": "npm install",
+    "server": "ts-node ./src/server.ts",
+    "preclient": "npm install",
+    "client": "ts-node ./src/client.ts"
+  },
+  "author": "Christopher Read",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/christopherread/obvs.js.git"
+  },
+  "devDependencies": {
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.2"
+  }
+}

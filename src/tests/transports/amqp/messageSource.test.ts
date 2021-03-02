@@ -22,7 +22,7 @@ describe('amqp MessageSource tests', () => {
     const conn = stubInterface<Connection>();
     // @ts-expect-error: Bluebird/Promise
     conn.close.returns(Promise.resolve());
-    
+
     const connections = shareableConnection(
       'some.uri',
       () => Promise.resolve(conn),
@@ -57,7 +57,7 @@ describe('amqp MessageSource tests', () => {
     conn.createChannel.returns(Promise.resolve(chan));
 
     const prefetch = 10;
-    const source = new MessageSource(connections, { queue: 'queue1', source: 'ex1', pattern:'' }, {}, prefetch);
+    const source = new MessageSource(connections, { exchange: 'ex1', type: 'topic' }, { queue: 'queue1', source: 'ex1', pattern: '' }, {}, prefetch);
     await eventLoopTick();
 
     let onNext = 0;

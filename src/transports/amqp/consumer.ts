@@ -13,7 +13,7 @@ export const observableConsumer = (
   queue: string,
   options?: Options.Consume
 ): Observable<ChannelMessage> => new Observable<ChannelMessage>((subscriber) => {
-  console.info(`Obvs: Creating new observable consumer - ${queue}`);
+  console.info(`Obvs creating new consumer on queue '${queue}'`);
 
   const tags: string[] = [];
 
@@ -24,25 +24,24 @@ export const observableConsumer = (
       options
     )
     .then((reply) => {
-      console.info(`Obvs: Created new observable consumer - ${queue}`);
       tags.push(reply.consumerTag);
     })
     .catch((err) => {
-      console.error('Obvs: Consume error', err);
+      console.error('Obvs consume error:', err.message);
       subscriber.error(err);
     });
 
   return () => {
-    console.info('Obvs: Cancelling observable consumer');
+    console.info('Obvs cancelling consumer');
 
     tags.forEach((tag) => {
       channel
         .cancel(tag)
         .then(() => {
-          console.info(`Obvs: Cancelled consumer - ${tag}`);
+          console.info(`Obvs cancelled consumer '${tag}'`);
         })
         .catch((err) => {
-          console.error(`Obvs: Error cancelling consumer - ${tag}`, err);
+          console.error(`Obvs error cancelling consumer '${tag}':`, err.message);
           subscriber.error(err);
         });
     });

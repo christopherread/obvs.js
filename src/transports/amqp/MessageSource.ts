@@ -10,7 +10,7 @@ import {
   Options
 } from 'amqplib';
 import { filterTruthy } from '../../utils/filterTruthy';
-import { Binding, retryingChannel } from './channel';
+import { ExchangeArgs, QueueArgs, shareableChannel } from './channel';
 import { MessageWrapper, wrapMessage } from "./message";
 import { retryingConsumer } from './consumer';
 import { Message } from "../../core/messages";
@@ -21,13 +21,14 @@ export class MessageSource<T extends Message> {
   private messageObservable: Observable<T>;
 
   constructor(connections: Observable<Connection>, 
-    binding: Binding,
+    exchange: ExchangeArgs,
+    queue: QueueArgs,
     options?: Options.Consume,
     prefetch = 50) {
     this.messageObservable = connections.pipe(
-      switchMap((connection) => retryingChannel(connection, prefetch, [], [binding])),
-      switchMap((channel) => retryingConsumer(channel, binding.queue, options)),
-      map((msg) => wrapMessage<T>(binding.queue, msg)),
+      switchMap((connection) => shareableChannel(connection, prefetch, [exchange], [queue])),
+      switchMap((channel) => retryingConsumer(channel, queue.queue, options)),
+      map((msg) => wrapMessage<T>(queue.queue, msg)),
       filterTruthy(),
       map(msg => unwrap(msg)),
       publish(),
