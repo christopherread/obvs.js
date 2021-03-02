@@ -5,8 +5,8 @@ import {
   Event,
   Request,
   Response
-} from "../../core/messages";
-import { ServiceEndpoint } from "../../core/ServiceEndpoint";
+} from '../../core/messages';
+import { ServiceEndpoint } from '../../core/ServiceEndpoint';
 import { QueueArgs } from './channel';
 import { AmqpEndpointConfig } from './config';
 import { MessagePublisher } from './MessagePublisher';

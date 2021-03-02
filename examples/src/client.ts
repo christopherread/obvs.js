@@ -3,7 +3,7 @@ import * as obvs from '../../src';
 import * as amqp from '../../src/transports/amqp';
 import { MyCommand1, MyRequest1 } from './types';
 
-const eventLoopTick = (ms: number = 1): Promise<void> =>
+const eventLoopTick = (ms = 1): Promise<void> =>
   new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 async function main() {

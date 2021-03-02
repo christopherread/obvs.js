@@ -1,7 +1,7 @@
 import 'should';
 import { Channel, Connection, ConsumeMessage, Replies } from 'amqplib';
-import { MessageSource } from "../../../transports/amqp/MessageSource";
-import { shareableConnection } from "../../../transports/amqp/connection";
+import { MessageSource } from '../../../transports/amqp/MessageSource';
+import { shareableConnection } from '../../../transports/amqp/connection';
 import { stubInterface } from 'ts-sinon';
 import { RetryBackoffConfig } from 'backoff-rxjs';
 
@@ -42,13 +42,13 @@ describe('amqp MessageSource tests', () => {
     let consumers: { [q: string]: (args: ConsumeMessage | null) => void } = {};
 
     // @ts-ignore
-    chan.consume.callsFake((q, onMessage, opt) => {
+    chan.consume.callsFake((q, onMessage) => {
       consumers[q] = onMessage;
       return Promise.resolve(reply);
     });
 
     // @ts-ignore
-    chan.cancel.callsFake((t) => {
+    chan.cancel.callsFake(() => {
       consumers = {};
       return Promise.resolve(emptyReply);
     });
@@ -79,7 +79,7 @@ describe('amqp MessageSource tests', () => {
     await eventLoopTick();
 
     const msg = stubInterface<ConsumeMessage>();
-    msg.properties.headers = {} as any;
+    msg.properties.headers = {};
     msg.content = Buffer.from(JSON.stringify({ data: '123' }))
     consumers.queue1(msg);
 

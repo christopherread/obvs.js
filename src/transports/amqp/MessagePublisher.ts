@@ -8,6 +8,7 @@ import {
   Options
 } from 'amqplib';
 import { ExchangeArgs, retryingChannel } from './channel';
+import { Message } from 'src/core/messages';
 
 export interface PublishArgs<T> {
   routingKey: string;
@@ -15,7 +16,7 @@ export interface PublishArgs<T> {
   options?: Options.Publish;
 }
 
-export class MessagePublisher<T = any> {
+export class MessagePublisher<T extends Message> {
   private channel: Channel | undefined;
   private subscription: Subscription | undefined;
   private exchange: ExchangeArgs;
@@ -29,9 +30,9 @@ export class MessagePublisher<T = any> {
         () => this.channel = undefined);
   }
 
-  publish({ routingKey, message, options }: PublishArgs<T>) {
+  publish({ routingKey, message, options }: PublishArgs<T>): Promise<void> {
     if (!this.channel) {
-      throw new Error(`MessagePublisher error: channel is undefined`)
+      throw new Error('MessagePublisher error: channel is undefined')
     }
     this.channel.publish(
       this.exchange.exchange,
@@ -42,7 +43,7 @@ export class MessagePublisher<T = any> {
     return Promise.resolve();
   }
 
-  close() {
+  close(): void {
     this.subscription?.unsubscribe();
     this.channel = undefined;
     this.subscription = undefined;

@@ -1,9 +1,8 @@
-import 'should';
 import { Channel, ConsumeMessage, Replies } from 'amqplib';
 import {
   observableConsumer,
   retryingConsumer
-} from "../../../transports/amqp/consumer";
+} from '../../../transports/amqp/consumer';
 import { stubInterface } from 'ts-sinon';
 import { RetryBackoffConfig } from 'backoff-rxjs';
 
@@ -94,13 +93,13 @@ describe('amqp observable consumer tests', () => {
     let consumers: { [q: string]: (args: ConsumeMessage | null) => void } = {};
 
     // @ts-ignore
-    chan.consume.callsFake((q, onMessage, opt) => {
+    chan.consume.callsFake((q, onMessage) => {
       consumers[q] = onMessage;
       return Promise.resolve(reply);
     });
 
     // @ts-ignore
-    chan.cancel.callsFake((t) => {
+    chan.cancel.callsFake(() => {
       consumers = {};
       return Promise.resolve(emptyReply);
     });
@@ -127,7 +126,7 @@ describe('amqp observable consumer tests', () => {
     await eventLoopTick();
 
     const msg = stubInterface<ConsumeMessage>();
-    msg.properties.headers = {} as any;
+    msg.properties.headers = {};
     consumers.queue1(msg);
 
     assert.strictEqual(onNext, 1, 'observable did not emit a new message');

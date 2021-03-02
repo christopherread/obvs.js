@@ -7,11 +7,11 @@ import {
   Request,
   Response,
   Message
-} from "../../core/messages";
-import { shareableConnection } from "./connection";
+} from '../../core/messages';
+import { shareableConnection } from './connection';
 import { MessagePublisher, PublishArgs } from './MessagePublisher';
 import { MessageSource } from './MessageSource';
-import { ServiceEndpointClient } from "../../core/ServiceEndpointClient";
+import { ServiceEndpointClient } from '../../core/ServiceEndpointClient';
 import { AmqpEndpointConfig } from './config';
 import { Connection, Options } from 'amqplib';
 import { DEFAULT_EXCHANGE_TYPE } from './defaults';
@@ -147,7 +147,7 @@ export class AmqpServiceEndpointClient<
     });
   }
 
-  canHandle({ type }: Message) {
+  canHandle({ type }: Message): boolean {
     return !!this.types?.has(type)
   }
 

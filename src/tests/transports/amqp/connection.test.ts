@@ -1,6 +1,6 @@
-import 'should';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Connection } from 'amqplib';
-import { shareableConnection } from "../../../transports/amqp/connection";
+import { shareableConnection } from '../../../transports/amqp/connection';
 import sinon, { stubInterface } from 'ts-sinon';
 import { RetryBackoffConfig } from 'backoff-rxjs';
 

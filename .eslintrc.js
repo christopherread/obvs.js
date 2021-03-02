@@ -2,7 +2,7 @@ module.exports = {
     root: true,
     parser: '@typescript-eslint/parser',
     parserOptions: {
-      project: './tsconfig.json',
+      project: './tsconfig.eslint.json',
       tsconfigRootDir: __dirname,
     },
     plugins: [
@@ -13,6 +13,8 @@ module.exports = {
       'plugin:@typescript-eslint/recommended',
     ],
     rules: {
-      '@typescript-eslint:ts-expect-error': 'allow-with-description'
+      'semi-style': ['error', 'last'],
+      'quotes': ['error', 'single'],
+      '@typescript-eslint/ban-ts-comment': 0,
     },
   };

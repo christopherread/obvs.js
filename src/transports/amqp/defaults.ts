@@ -1,4 +1,4 @@
-import { RetryBackoffConfig } from "backoff-rxjs";
+import { RetryBackoffConfig } from 'backoff-rxjs';
 
 const oneSecond = 1000; // 1 second in ms
 const twoMinutes = 2 * 60 * 1000; // 2 minutes in ms

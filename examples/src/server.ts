@@ -2,7 +2,7 @@ import * as obvs from '../../src';
 import * as amqp from '../../src/transports/amqp';
 import { MyCommand1, MyEvent1, MyResponse1 } from './types';
 
-const waitFor = (ms: number = 1): Promise<void> =>
+const waitFor = (ms = 1): Promise<void> =>
   new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 async function main() {

@@ -13,6 +13,6 @@ module.exports = {
       'plugin:@typescript-eslint/recommended',
     ],
     rules: {
-      '@typescript-eslint:ts-expect-error': 'allow-with-description'
+      '@typescript-eslint/ban-ts-comment': 0,
     },
   };

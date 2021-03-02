@@ -27,13 +27,13 @@ export interface AmqpEndpointConfigurator<
 const validateConfig = (cfg: AmqpEndpointConfig) => {
   const errors: string[] = [];
   if (!cfg.url) {
-    errors.push(`please specify amqp broker url`);
+    errors.push('please specify amqp broker url');
   }
   if (!cfg.name) {
-    errors.push(`please specify service name`);
+    errors.push('please specify service name');
   }
   if (!cfg.types || cfg.types.size === 0) {
-    errors.push(`please specify list of message types for the service`);
+    errors.push('please specify list of message types for the service');
   }
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));

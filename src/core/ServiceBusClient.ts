@@ -41,14 +41,14 @@ export class ServiceBusClientInstance<
 
   events: Observable<TEvent>;
 
-  async send(command: TCommand) {
+  async send(command: TCommand): Promise<void> {
     await Promise.all([
       ...this.endpointClients.filter(ep => ep.canHandle(command)).map(ep => ep.send(command)),
       ...this.endpoints.filter(ep => ep.canHandle(command)).map(ep => ep.send(command)),
     ]);
-  };
+  }
 
-  getResponses(request: TRequest) {
+  getResponses(request: TRequest): Observable<TResponse> {
     return merge<TResponse>(
       ...this.endpoints.filter(ep => ep.canHandle(request)).map(ep => ep.getResponses(request)),
       ...this.endpointClients.filter(ep => ep.canHandle(request)).map(ep => ep.getResponses(request))

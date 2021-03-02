@@ -1,9 +1,9 @@
-import 'should';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Channel, Connection, Replies } from 'amqplib';
 import {
   observableChannel,
   retryingChannel
-} from "../../../transports/amqp/channel";
+} from '../../../transports/amqp/channel';
 import { stubInterface } from 'ts-sinon';
 import { RetryBackoffConfig } from 'backoff-rxjs';
 

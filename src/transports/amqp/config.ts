@@ -1,4 +1,4 @@
-import { FactoryFunc } from "./connection";
+import { FactoryFunc } from './connection';
 
 export interface AmqpEndpointConfig {
   url?: string;

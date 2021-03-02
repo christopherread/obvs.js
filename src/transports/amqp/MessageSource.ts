@@ -11,9 +11,9 @@ import {
 } from 'amqplib';
 import { filterTruthy } from '../../utils/filterTruthy';
 import { ExchangeArgs, QueueArgs, shareableChannel } from './channel';
-import { MessageWrapper, wrapMessage } from "./message";
+import { MessageWrapper, wrapMessage } from './message';
 import { retryingConsumer } from './consumer';
-import { Message } from "../../core/messages";
+import { Message } from '../../core/messages';
 
 const unwrap = <T extends Message>(msg: MessageWrapper<T>): T => ({ ...msg.payload, type: msg.payload.type });
 
@@ -39,4 +39,4 @@ export class MessageSource<T extends Message> {
   messages(): Observable<T> {
     return this.messageObservable;
   }
-};
+}
