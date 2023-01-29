@@ -51,7 +51,7 @@
   "dependencies": {
     "amqplib": "^0.7.0",
     "backoff-rxjs": "^6.5.7",
-    "dotenv": "^8.2.0",
+    "dotenv": "^16.0.3",
     "rxjs": "^6.6.6",
     "uuid": "^8.3.2"
   }
